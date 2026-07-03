@@ -1,18 +1,34 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DEPARTMENT_NAME } from '@/types/employee';
 import { useEmployees } from '@/context/EmployeesContext';
+import { useTasks } from '@/context/TasksContext';
 import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const navigate = useNavigate();
   const { employees } = useEmployees();
+  const { tasks } = useTasks();
   const { user, isBoss, logout } = useAuth();
-  const active = employees.filter((e) => e.status === 'active').length;
 
+  const active = employees.filter((e) => e.status === 'active').length;
   const myId = employees.find((e) => e.login && e.login === user?.login)?.id;
 
+  const myActiveTasks = useMemo(
+    () => tasks.filter((t) => t.assigneeId === myId && t.status !== 'done').length,
+    [tasks, myId]
+  );
+
   const sections = [
+    {
+      title: 'Мои задачи',
+      description: 'Задачи, назначенные вам, а также задачи сотрудников, которых вы назначили исполнителями',
+      icon: 'ListTodo',
+      to: '/tasks',
+      accent: 'from-rose-500 to-pink-700',
+      badge: myActiveTasks > 0 ? `${myActiveTasks} активных` : 'Задачи',
+    },
     {
       title: 'Сотрудники',
       description: 'Список сотрудников, фильтрация, добавление и редактирование. Переход в личный кабинет — прямо из карточки сотрудника',
