@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEmployees } from '@/context/EmployeesContext';
+import { useAuth } from '@/context/AuthContext';
 import { STATUS_META } from '@/types/employee';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import EmployeeFormDialog from '@/components/EmployeeFormDialog';
@@ -13,6 +14,7 @@ const EmployeeProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { getById, save } = useEmployees();
+  const { isBoss } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
 
   const employee = id ? getById(id) : undefined;
@@ -60,13 +62,15 @@ const EmployeeProfile = () => {
             <Icon name="ArrowLeft" size={16} />
             К списку
           </button>
-          <button
-            onClick={() => setEditOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:border-accent hover:text-accent"
-          >
-            <Icon name="Pencil" size={15} />
-            Редактировать
-          </button>
+          {isBoss && (
+            <button
+              onClick={() => setEditOpen(true)}
+              className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:border-accent hover:text-accent"
+            >
+              <Icon name="Pencil" size={15} />
+              Редактировать
+            </button>
+          )}
         </div>
       </header>
 
@@ -139,6 +143,29 @@ const EmployeeProfile = () => {
             </p>
           </div>
         </div>
+
+        {employee.customFields && employee.customFields.length > 0 && (
+          <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="font-display text-lg font-semibold tracking-wide text-foreground">
+              Дополнительная информация
+            </h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {employee.customFields.map((cf, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                    <Icon name="Tag" size={16} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                      {cf.label || '—'}
+                    </div>
+                    <div className="font-medium text-foreground">{cf.value || '—'}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <EmployeeFormDialog

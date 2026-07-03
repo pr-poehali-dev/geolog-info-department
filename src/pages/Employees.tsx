@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEmployees } from '@/context/EmployeesContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   DEPARTMENT_NAME,
   Employee,
@@ -26,6 +27,7 @@ import {
 const Employees = () => {
   const navigate = useNavigate();
   const { employees, save, remove, loading } = useEmployees();
+  const { isBoss, logout, user } = useAuth();
 
   const [search, setSearch] = useState('');
   const [posFilter, setPosFilter] = useState<string>('all');
@@ -69,13 +71,27 @@ const Employees = () => {
           <div className="hidden truncate font-display text-sm uppercase tracking-widest text-muted-foreground md:block">
             {DEPARTMENT_NAME}
           </div>
-          <button
-            onClick={openCreate}
-            className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent/90"
-          >
-            <Icon name="Plus" size={16} />
-            Добавить
-          </button>
+          <div className="flex items-center gap-2">
+            {isBoss && (
+              <button
+                onClick={openCreate}
+                className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent/90"
+              >
+                <Icon name="Plus" size={16} />
+                Добавить
+              </button>
+            )}
+            <button
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+              title={`Выйти (${user?.fullName || ''})`}
+            >
+              <Icon name="LogOut" size={16} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -138,6 +154,7 @@ const Employees = () => {
               <EmployeeCard
                 key={e.id}
                 employee={e}
+                canManage={isBoss}
                 onOpen={(id) => navigate(`/employees/${id}`)}
                 onEdit={openEdit}
                 onDelete={setDeleteId}

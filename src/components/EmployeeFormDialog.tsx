@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import Icon from '@/components/ui/icon';
 import {
   Employee,
   EmployeePosition,
@@ -29,7 +30,7 @@ interface EmployeeFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   employee: Employee | null;
-  onSave: (employee: Employee) => void;
+  onSave: (employee: Employee) => void | Promise<void>;
 }
 
 const COLORS = [
@@ -52,6 +53,9 @@ const empty = (): Employee => ({
   location: '',
   about: '',
   avatarColor: COLORS[Math.floor(Math.random() * COLORS.length)],
+  login: '',
+  password: '',
+  customFields: [],
   stats: { tasksDone: 0, tasksInProgress: 0, reports: 0, efficiency: 0 },
 });
 
@@ -64,15 +68,43 @@ const EmployeeFormDialog = ({
   const [form, setForm] = useState<Employee>(empty());
 
   useEffect(() => {
-    setForm(employee ? { ...employee } : empty());
+    setForm(
+      employee
+        ? { ...employee, password: '', customFields: employee.customFields || [] }
+        : empty()
+    );
   }, [employee, open]);
 
   const set = (patch: Partial<Employee>) => setForm((f) => ({ ...f, ...patch }));
 
-  const handleSubmit = () => {
+  const addField = () =>
+    setForm((f) => ({
+      ...f,
+      customFields: [...(f.customFields || []), { label: '', value: '' }],
+    }));
+
+  const updateField = (i: number, patch: Partial<{ label: string; value: string }>) =>
+    setForm((f) => ({
+      ...f,
+      customFields: f.customFields.map((cf, idx) =>
+        idx === i ? { ...cf, ...patch } : cf
+      ),
+    }));
+
+  const removeField = (i: number) =>
+    setForm((f) => ({
+      ...f,
+      customFields: f.customFields.filter((_, idx) => idx !== i),
+    }));
+
+  const handleSubmit = async () => {
     if (!form.fullName.trim()) return;
-    onSave(form);
-    onOpenChange(false);
+    try {
+      await onSave(form);
+      onOpenChange(false);
+    } catch {
+      /* ошибка сохранения — диалог остаётся открытым */
+    }
   };
 
   return (
@@ -188,6 +220,79 @@ const EmployeeFormDialog = ({
               placeholder="Зона ответственности, задачи..."
               rows={3}
             />
+          </div>
+
+          <div className="rounded-xl border border-border bg-secondary/40 p-4">
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+              <Icon name="KeyRound" size={15} className="text-accent" />
+              Доступ в систему
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Логин</Label>
+                <Input
+                  value={form.login || ''}
+                  onChange={(e) => set({ login: e.target.value })}
+                  placeholder="ivanov"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{employee ? 'Новый пароль' : 'Пароль'}</Label>
+                <Input
+                  type="password"
+                  value={form.password || ''}
+                  onChange={(e) => set({ password: e.target.value })}
+                  placeholder={employee ? 'Оставьте пустым' : 'Задайте пароль'}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2">
+                <Icon name="ListPlus" size={15} className="text-accent" />
+                Дополнительные поля
+              </Label>
+              <button
+                type="button"
+                onClick={addField}
+                className="flex items-center gap-1 text-sm font-semibold text-accent transition-colors hover:text-accent/80"
+              >
+                <Icon name="Plus" size={14} />
+                Добавить
+              </button>
+            </div>
+
+            {form.customFields.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Например: «Учёная степень», «Категория допуска», «Куратор участка»
+              </p>
+            )}
+
+            {form.customFields.map((cf, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <Input
+                  value={cf.label}
+                  onChange={(e) => updateField(i, { label: e.target.value })}
+                  placeholder="Название поля"
+                  className="flex-1"
+                />
+                <Input
+                  value={cf.value}
+                  onChange={(e) => updateField(i, { value: e.target.value })}
+                  placeholder="Значение"
+                  className="flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeField(i)}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+                >
+                  <Icon name="X" size={15} />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 

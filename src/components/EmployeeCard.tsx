@@ -4,12 +4,13 @@ import Icon from '@/components/ui/icon';
 
 interface EmployeeCardProps {
   employee: Employee;
+  canManage?: boolean;
   onOpen: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-const EmployeeCard = ({ employee, onOpen, onEdit, onDelete }: EmployeeCardProps) => {
+const EmployeeCard = ({ employee, canManage, onOpen, onEdit, onDelete }: EmployeeCardProps) => {
   const status = STATUS_META[employee.status];
 
   return (
@@ -53,20 +54,24 @@ const EmployeeCard = ({ employee, onOpen, onEdit, onDelete }: EmployeeCardProps)
           <Icon name="User" size={15} />
           Кабинет
         </button>
-        <button
-          onClick={() => onEdit(employee.id)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-accent hover:text-accent"
-          title="Редактировать"
-        >
-          <Icon name="Pencil" size={15} />
-        </button>
-        <button
-          onClick={() => onDelete(employee.id)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
-          title="Удалить"
-        >
-          <Icon name="Trash2" size={15} />
-        </button>
+        {canManage && (
+          <>
+            <button
+              onClick={() => onEdit(employee.id)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+              title="Редактировать"
+            >
+              <Icon name="Pencil" size={15} />
+            </button>
+            <button
+              onClick={() => onDelete(employee.id)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+              title="Удалить"
+            >
+              <Icon name="Trash2" size={15} />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,12 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { DEPARTMENT_NAME } from '@/types/employee';
 import { useEmployees } from '@/context/EmployeesContext';
+import { useAuth } from '@/context/AuthContext';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const navigate = useNavigate();
   const { employees } = useEmployees();
+  const { user, isBoss, logout } = useAuth();
   const active = employees.filter((e) => e.status === 'active').length;
+
+  const myId = employees.find((e) => e.login && e.login === user?.login)?.id;
 
   const sections = [
     {
@@ -18,22 +22,56 @@ const Index = () => {
       badge: `${employees.length} чел.`,
     },
     {
-      title: 'Настройки системы',
-      description: 'Управление ролями доступа и параметрами отдела',
-      icon: 'Settings',
-      to: '/settings',
-      accent: 'from-amber-500 to-orange-700',
-      badge: 'Роли',
+      title: 'Мой кабинет',
+      description: 'Ваши персональные данные, контакты и статистика',
+      icon: 'IdCard',
+      to: myId ? `/employees/${myId}` : '/employees',
+      accent: 'from-sky-500 to-indigo-700',
+      badge: 'Личное',
     },
+    ...(isBoss
+      ? [
+          {
+            title: 'Настройки системы',
+            description: 'Управление ролями доступа и параметрами отдела',
+            icon: 'Settings',
+            to: '/settings',
+            accent: 'from-amber-500 to-orange-700',
+            badge: 'Роли',
+          },
+        ]
+      : []),
   ];
 
   return (
     <div className="topo-grid min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
         <div className="animate-fade-in">
-          <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-sm font-semibold text-accent">
-            <Icon name="Mountain" size={16} />
-            Система управления отделом
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-sm font-semibold text-accent">
+              <Icon name="Mountain" size={16} />
+              Система управления отделом
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">
+                {user?.fullName}
+                {isBoss && (
+                  <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
+                    Начальник
+                  </span>
+                )}
+              </span>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login');
+                }}
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+                title="Выйти"
+              >
+                <Icon name="LogOut" size={16} />
+              </button>
+            </div>
           </div>
 
           <h1 className="mt-6 max-w-3xl font-display text-4xl font-bold leading-[1.05] text-primary md:text-6xl">
@@ -46,7 +84,7 @@ const Index = () => {
           </p>
         </div>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-2">
+        <div className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {sections.map((s, i) => (
             <button
               key={s.title}
