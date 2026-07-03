@@ -1,0 +1,22 @@
+{
+  "tests": [
+    {
+      "name": "Получить список задач",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Создание задачи без авторизации запрещено",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "title": "Тестовая задача",
+        "assigneeId": "3",
+        "priority": "medium",
+        "status": "new"
+      },
+      "expectedStatus": 401
+    }
+  ]
+}

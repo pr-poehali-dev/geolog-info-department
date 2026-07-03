@@ -11,6 +11,10 @@ interface AuthContextValue {
   login: (login: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   setUser: (user: Employee) => void;
+  changePassword: (
+    oldPassword: string,
+    newPassword: string
+  ) => Promise<{ ok: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -56,9 +60,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => persist(null);
 
+  const changePassword = async (oldPassword: string, newPassword: string) => {
+    if (!user?.login) return { ok: false, error: 'Требуется авторизация' };
+    try {
+      const res = await fetch(`${API_URL}?action=change_password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Login': user.login },
+        body: JSON.stringify({ action: 'change_password', oldPassword, newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return { ok: false, error: data.error || 'Не удалось сменить пароль' };
+      }
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Ошибка соединения с сервером' };
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, isBoss: isBoss(user), login, logout, setUser: persist }}
+      value={{ user, isBoss: isBoss(user), login, logout, setUser: persist, changePassword }}
     >
       {children}
     </AuthContext.Provider>

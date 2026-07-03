@@ -39,6 +39,17 @@
         "position": "Специалист"
       },
       "expectedStatus": 403
+    },
+    {
+      "name": "Смена пароля без авторизации запрещена",
+      "method": "POST",
+      "path": "/?action=change_password",
+      "body": {
+        "action": "change_password",
+        "oldPassword": "x",
+        "newPassword": "newpass"
+      },
+      "expectedStatus": 401
     }
   ]
 }

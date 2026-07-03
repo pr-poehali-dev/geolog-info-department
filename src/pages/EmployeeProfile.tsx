@@ -1,10 +1,15 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEmployees } from '@/context/EmployeesContext';
 import { useAuth } from '@/context/AuthContext';
+import { useTasks } from '@/context/TasksContext';
 import { STATUS_META } from '@/types/employee';
+import { TaskStatus } from '@/types/task';
 import EmployeeAvatar from '@/components/EmployeeAvatar';
 import EmployeeFormDialog from '@/components/EmployeeFormDialog';
+import ChangePasswordDialog from '@/components/ChangePasswordDialog';
+import TaskFormDialog from '@/components/TaskFormDialog';
+import TaskCard from '@/components/TaskCard';
 import Icon from '@/components/ui/icon';
 
 const formatDate = (d: string) =>
@@ -14,10 +19,22 @@ const EmployeeProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { getById, save } = useEmployees();
-  const { isBoss } = useAuth();
+  const { isBoss, user } = useAuth();
+  const { tasks, update, remove } = useTasks();
   const [editOpen, setEditOpen] = useState(false);
+  const [pwdOpen, setPwdOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
 
   const employee = id ? getById(id) : undefined;
+  const isOwnProfile = !!user && !!employee && user.login === employee.login;
+
+  const employeeTasks = useMemo(
+    () => tasks.filter((t) => t.assigneeId === id),
+    [tasks, id]
+  );
+
+  const handleStatusChange = (taskId: string, status: TaskStatus) =>
+    update({ id: taskId, status });
 
   if (!employee) {
     return (
@@ -62,15 +79,35 @@ const EmployeeProfile = () => {
             <Icon name="ArrowLeft" size={16} />
             К списку
           </button>
-          {isBoss && (
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setEditOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition-colors hover:border-accent hover:text-accent"
+              onClick={() => setTaskOpen(true)}
+              className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent/90"
             >
-              <Icon name="Pencil" size={15} />
-              Редактировать
+              <Icon name="Plus" size={15} />
+              <span className="hidden sm:inline">Создать задачу</span>
             </button>
-          )}
+            {isOwnProfile && (
+              <button
+                onClick={() => setPwdOpen(true)}
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold transition-colors hover:border-accent hover:text-accent"
+                title="Сменить пароль"
+              >
+                <Icon name="KeyRound" size={15} />
+                <span className="hidden sm:inline">Пароль</span>
+              </button>
+            )}
+            {isBoss && (
+              <button
+                onClick={() => setEditOpen(true)}
+                className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold transition-colors hover:border-accent hover:text-accent"
+                title="Редактировать"
+              >
+                <Icon name="Pencil" size={15} />
+                <span className="hidden sm:inline">Редактировать</span>
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -166,6 +203,44 @@ const EmployeeProfile = () => {
             </div>
           </div>
         )}
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-display text-lg font-semibold tracking-wide text-foreground">
+              <Icon name="ListTodo" size={18} className="text-accent" />
+              Задачи сотрудника
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                {employeeTasks.length}
+              </span>
+            </h2>
+            <button
+              onClick={() => setTaskOpen(true)}
+              className="flex items-center gap-1.5 text-sm font-semibold text-accent transition-colors hover:text-accent/80"
+            >
+              <Icon name="Plus" size={15} />
+              Добавить
+            </button>
+          </div>
+
+          {employeeTasks.length === 0 ? (
+            <div className="mt-6 flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
+              <Icon name="ClipboardList" size={32} className="text-muted-foreground/40" />
+              <p className="text-sm">Задач пока нет</p>
+            </div>
+          ) : (
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {employeeTasks.map((t) => (
+                <TaskCard
+                  key={t.id}
+                  task={t}
+                  canManage={isBoss || isOwnProfile}
+                  onStatusChange={handleStatusChange}
+                  onDelete={remove}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <EmployeeFormDialog
@@ -173,6 +248,12 @@ const EmployeeProfile = () => {
         onOpenChange={setEditOpen}
         employee={employee}
         onSave={save}
+      />
+      <ChangePasswordDialog open={pwdOpen} onOpenChange={setPwdOpen} />
+      <TaskFormDialog
+        open={taskOpen}
+        onOpenChange={setTaskOpen}
+        defaultAssigneeId={employee.id}
       />
     </div>
   );

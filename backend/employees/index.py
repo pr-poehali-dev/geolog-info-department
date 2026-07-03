@@ -102,6 +102,24 @@ def handler(event: dict, context) -> dict:
                 'body': json.dumps(_serialize(row, include_login=True)),
             }
 
+        if params.get('action') == 'change_password' or body.get('action') == 'change_password':
+            if not actor_login:
+                return {'statusCode': 401, 'headers': _cors_headers(), 'body': json.dumps({'error': 'Требуется авторизация'})}
+            old_pw = body.get('oldPassword', '')
+            new_pw = body.get('newPassword', '')
+            if len(new_pw) < 4:
+                return {'statusCode': 400, 'headers': _cors_headers(), 'body': json.dumps({'error': 'Новый пароль слишком короткий (мин. 4 символа)'})}
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute(
+                    'SELECT id FROM employees WHERE login = %s AND password = %s',
+                    (actor_login, _hash_password(old_pw)),
+                )
+                me = cur.fetchone()
+                if not me:
+                    return {'statusCode': 403, 'headers': _cors_headers(), 'body': json.dumps({'error': 'Неверный текущий пароль'})}
+                cur.execute('UPDATE employees SET password = %s WHERE id = %s', (_hash_password(new_pw), me['id']))
+            return {'statusCode': 200, 'headers': _cors_headers(), 'body': json.dumps({'success': True})}
+
         with conn.cursor(cursor_factory=RealDictCursor) as check_cur:
             if not _is_boss(check_cur, actor_login):
                 return {
