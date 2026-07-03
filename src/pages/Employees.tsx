@@ -25,7 +25,7 @@ import {
 
 const Employees = () => {
   const navigate = useNavigate();
-  const { employees, save, remove } = useEmployees();
+  const { employees, save, remove, loading } = useEmployees();
 
   const [search, setSearch] = useState('');
   const [posFilter, setPosFilter] = useState<string>('all');
@@ -127,7 +127,12 @@ const Employees = () => {
           </select>
         </div>
 
-        {filtered.length > 0 ? (
+        {loading ? (
+          <div className="mt-16 flex flex-col items-center gap-3 text-center text-muted-foreground">
+            <Icon name="LoaderCircle" size={36} className="animate-spin text-accent" />
+            <p>Загружаем сотрудников...</p>
+          </div>
+        ) : filtered.length > 0 ? (
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((e) => (
               <EmployeeCard

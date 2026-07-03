@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Получить список сотрудников",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "Добавить сотрудника",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "fullName": "Тестов Тест Тестович",
+        "position": "Специалист",
+        "status": "active",
+        "email": "test@geomonitor.ru",
+        "phone": "+7 (495) 000-00-00",
+        "stats": {"tasksDone": 0, "tasksInProgress": 0, "reports": 0, "efficiency": 0}
+      },
+      "expectedStatus": 201,
+      "bodyMatcher": "partial",
+      "expectedBody": {"fullName": "Тестов Тест Тестович"}
+    }
+  ]
+}

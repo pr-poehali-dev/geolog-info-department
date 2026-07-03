@@ -11,19 +11,11 @@ const Index = () => {
   const sections = [
     {
       title: 'Сотрудники',
-      description: 'Список сотрудников, фильтрация, добавление и редактирование',
+      description: 'Список сотрудников, фильтрация, добавление и редактирование. Переход в личный кабинет — прямо из карточки сотрудника',
       icon: 'Users',
       to: '/employees',
       accent: 'from-emerald-500 to-teal-700',
       badge: `${employees.length} чел.`,
-    },
-    {
-      title: 'Личные кабинеты',
-      description: 'Карточки сотрудников с данными и персональной статистикой',
-      icon: 'IdCard',
-      to: '/employees',
-      accent: 'from-sky-500 to-indigo-700',
-      badge: `${active} на работе`,
     },
     {
       title: 'Настройки системы',
@@ -49,12 +41,12 @@ const Index = () => {
           </h1>
 
           <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-            Единая рабочая среда отдела: сотрудники, личные кабинеты и статистика
-            в одном месте.
+            Единая рабочая среда отдела: управление сотрудниками, их данными и
+            личными кабинетами в одном месте.
           </p>
         </div>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-3">
+        <div className="mt-14 grid gap-5 md:grid-cols-2">
           {sections.map((s, i) => (
             <button
               key={s.title}
