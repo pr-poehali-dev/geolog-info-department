@@ -1,0 +1,3 @@
+INSERT INTO employees (full_name, position, status, email, phone, location, about, avatar_color, login, password, custom_fields, tasks_done, tasks_in_progress, reports, efficiency)
+SELECT 'Жилка Олег Вячеславович', 'Начальник отдела', 'active', 'OZhilka@rfgf.ru', '', 'Москва', 'Начальник отдела.', 'from-violet-500 to-purple-700', 'OZhilka@rfgf.ru', '123456', '[]'::jsonb, 0, 0, 0, 100
+WHERE NOT EXISTS (SELECT 1 FROM employees WHERE login = 'OZhilka@rfgf.ru');

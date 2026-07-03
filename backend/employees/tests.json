@@ -7,26 +7,26 @@
       "expectedStatus": 200
     },
     {
-      "name": "Успешный вход начальника",
+      "name": "Успешный вход Жилки О.В.",
       "method": "POST",
       "path": "/?action=login",
       "body": {
         "action": "login",
-        "login": "sokolov",
-        "password": "admin123"
+        "login": "OZhilka@rfgf.ru",
+        "password": "123456"
       },
       "expectedStatus": 200,
       "bodyMatcher": "partial",
       "expectedBody": {"position": "Начальник отдела"}
     },
     {
-      "name": "Неверный пароль",
+      "name": "Неверный пароль отклоняется",
       "method": "POST",
       "path": "/?action=login",
       "body": {
         "action": "login",
         "login": "sokolov",
-        "password": "wrong"
+        "password": "definitely-wrong-000"
       },
       "expectedStatus": 401
     },

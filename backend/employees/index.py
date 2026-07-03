@@ -1,7 +1,14 @@
 import json
 import os
+import hashlib
 import psycopg2
 from psycopg2.extras import RealDictCursor, Json
+
+PASSWORD_SALT = 'geomonitor_2024_salt'
+
+
+def _hash_password(raw):
+    return hashlib.sha256((PASSWORD_SALT + (raw or '')).encode('utf-8')).hexdigest()
 
 
 def _cors_headers():
@@ -63,6 +70,7 @@ def handler(event: dict, context) -> dict:
 
     try:
         params = event.get('queryStringParameters') or {}
+        body = json.loads(event.get('body') or '{}')
 
         if method == 'GET':
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -75,13 +83,11 @@ def handler(event: dict, context) -> dict:
                 'body': json.dumps([_serialize(r, include_login=is_boss) for r in rows]),
             }
 
-        body = json.loads(event.get('body') or '{}')
-
         if params.get('action') == 'login' or body.get('action') == 'login':
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute(
                     'SELECT * FROM employees WHERE login = %s AND password = %s',
-                    (body.get('login', ''), body.get('password', '')),
+                    (body.get('login', ''), _hash_password(body.get('password', ''))),
                 )
                 row = cur.fetchone()
             if not row:
@@ -125,7 +131,7 @@ def handler(event: dict, context) -> dict:
                         body.get('about', ''),
                         body.get('avatarColor', 'from-emerald-500 to-teal-700'),
                         body.get('login') or None,
-                        body.get('password', ''),
+                        _hash_password(body.get('password', '')),
                         Json(body.get('customFields', [])),
                         stats.get('tasksDone', 0),
                         stats.get('tasksInProgress', 0),
@@ -145,7 +151,7 @@ def handler(event: dict, context) -> dict:
             stats = body.get('stats', {})
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 if body.get('password'):
-                    cur.execute('UPDATE employees SET password = %s WHERE id = %s', (body['password'], emp_id))
+                    cur.execute('UPDATE employees SET password = %s WHERE id = %s', (_hash_password(body['password']), emp_id))
                 cur.execute(
                     '''UPDATE employees SET
                     full_name=%s, position=%s, status=%s, email=%s, phone=%s,
