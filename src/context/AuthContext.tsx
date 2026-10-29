@@ -7,6 +7,7 @@ const STORAGE_KEY = 'geomonitor_auth';
 
 interface AuthContextValue {
   user: Employee | null;
+  loaded: boolean;
   isBoss: boolean;
   login: (login: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
@@ -21,6 +22,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUserState] = useState<Employee | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -31,6 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem(STORAGE_KEY);
       }
     }
+    setLoaded(true);
   }, []);
 
   const persist = (u: Employee | null) => {
@@ -80,7 +83,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isBoss: isBoss(user), login, logout, setUser: persist, changePassword }}
+      value={{ user, loaded, isBoss: isBoss(user), login, logout, setUser: persist, changePassword }}
     >
       {children}
     </AuthContext.Provider>

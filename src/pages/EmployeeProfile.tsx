@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from "@/lib/router-compat";
 import { useEmployees } from '@/context/EmployeesContext';
 import { useAuth } from '@/context/AuthContext';
 import { useTasks } from '@/context/TasksContext';
